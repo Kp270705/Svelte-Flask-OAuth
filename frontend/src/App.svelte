@@ -7,6 +7,7 @@
         });
         if (res.ok) {
             user = await res.json();
+            console.log(`User is: ${user.name}`)
         }
     }
 
@@ -30,9 +31,9 @@
     {#if user}
         <h1>Welcome {user.name}!</h1>
         <p>Email: {user.email}</p>
-        <button on:click={logout}>Logout</button>
+        <button onclick={logout}>Logout</button>
     {:else}
-        <button on:click={login}>Login with Google</button>
+        <button onclick={login}>Login with Google</button>
     {/if}
 </main>
 

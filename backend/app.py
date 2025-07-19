@@ -38,6 +38,7 @@ def login():
         "response_type": "code",
         "prompt": "consent",
     })
+    print(f"r\n\n\trequest uri is: {request_uri}")
 
     return redirect(request_uri)
 
