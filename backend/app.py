@@ -1,79 +1,44 @@
-from flask import Flask, redirect, request, jsonify, session, url_for
+from flask import Flask
 from flask_cors import CORS
-import requests
-import os
-import json
-from urllib.parse import urlencode
-from getPass import password1,password2
+from datetime import timedelta
 
-app = Flask(__name__)
-app.secret_key = 'your-secret-key'
-CORS(app, supports_credentials=True)
-
-CLIENT_ID = password1
-CLIENT_SECRET = password2
-REDIRECT_URI = "http://localhost:5000/callback"
-
-GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
-
-def get_google_provider_cfg():
-    return requests.get(GOOGLE_DISCOVERY_URL).json()
+from initResources.db import db
+from models.models import User
+from initResources.jwt import jwt
+from resources.protected import resources_bp, register_jwt_error_handlers
+from authentication import auth_bp
+from scripting.genString import generate_random_string
 
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return jsonify({"message": "Logged out successfully"}), 200
+def create_app():
+    pass
+
+    app = Flask(__name__)
+    app.secret_key = generate_random_string(32)
+    app.config['JWT_SECRET_KEY'] = generate_random_string(32)
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=45)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+    CORS(app, supports_credentials=True)
+
+    # initialize db :
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+
+    # initialize jwt manager
+    jwt.init_app(app)
+    # register JWT error handlers
+    register_jwt_error_handlers()
+
+    # register authentication blueprint
+    app.register_blueprint(auth_bp)
+    # register resources blueprint
+    app.register_blueprint(resources_bp)
 
 
-@app.route("/login")
-def login():
-    google_cfg = get_google_provider_cfg()
-    auth_endpoint = google_cfg["authorization_endpoint"]
+    return app
 
-    request_uri = auth_endpoint + "?" + urlencode({
-        "client_id": CLIENT_ID,
-        "redirect_uri": REDIRECT_URI,
-        "scope": "openid email profile",
-        "response_type": "code",
-        "prompt": "consent",
-    })
-    print(f"r\n\n\trequest uri is: {request_uri}")
+if __name__ == "__main__":
+    app = create_app()
+    app.run(port=5000, debug=True)
 
-    return redirect(request_uri)
-
-@app.route("/callback")
-def callback():
-    code = request.args.get("code")
-
-    google_cfg = get_google_provider_cfg()
-    token_endpoint = google_cfg["token_endpoint"]
-
-    token_data = {
-        "code": code,
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "redirect_uri": REDIRECT_URI,
-        "grant_type": "authorization_code",
-    }
-
-    token_response = requests.post(token_endpoint, data=token_data)
-    token_json = token_response.json()
-    access_token = token_json["access_token"]
-
-    userinfo_endpoint = google_cfg["userinfo_endpoint"]
-    userinfo_response = requests.get(userinfo_endpoint, headers={
-        "Authorization": f"Bearer {access_token}"
-    })
-
-    userinfo = userinfo_response.json()
-    session['user'] = userinfo
-
-    # return the info or redirect to Svelte
-    return redirect(f"http://localhost:5173/?email={userinfo['email']}&name={userinfo['name']}")
-
-@app.route("/profile")
-def profile():
-    if "user" not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-    return jsonify(session["user"])

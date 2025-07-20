@@ -1,1 +1,1 @@
-from .protected import protected_bp
+from .protected import resources_bp

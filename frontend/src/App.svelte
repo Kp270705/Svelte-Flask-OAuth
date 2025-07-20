@@ -1,54 +1,45 @@
 <script>
-    let user = null;
+    import { getProfile, login, logout, readTokenFromCookie } from './lib/api.js';
 
-    async function fetchProfile() {
-        const res = await fetch("http://localhost:5000/profile", {
-            credentials: "include"
-        });
-        if (res.ok) {
-            user = await res.json();
-            console.log(`User is: ${user.name}`)
+    import PersonalResource from './lib/PersonalResource.svelte';
+
+    let token = $state('');
+    let user = $state(null);
+
+    async function init() {
+        user = await getProfile();
+        if (user) console.log(`User is: ${user.name}`);
+    }
+
+    async function handleLogout() {
+        const ok = await logout();
+        if (ok) user = null;
+    }
+
+    async function readToken(){
+        token = await readTokenFromCookie();
+        if (token) {
+            console.log(`Token read: ${token}`);
+        } else {
+            console.log('No token found');
         }
     }
 
-    function login() {
-        window.location.href = "http://localhost:5000/login";
-    }
-
-    async function logout() {
-        const res = await fetch("http://localhost:5000/logout", {
-            credentials: "include"
-        });
-        if (res.ok) {
-            user = null;
-        }
-    }
-
-    fetchProfile();
+    init();
 </script>
 
 <main>
     {#if user}
         <h1>Welcome {user.name}!</h1>
         <p>Email: {user.email}</p>
-        <button onclick={logout}>Logout</button>
+        <button onclick={handleLogout}>Logout</button>
+        <button onclick={readToken}>Read Token</button>
+        {#if token}
+            <PersonalResource {token} />
+        {:else}
+            <p>No token available. Please log in.</p>
+        {/if}
     {:else}
         <button onclick={login}>Login with Google</button>
     {/if}
 </main>
-
-<style>
-    main {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 4rem;
-    }
-
-    button {
-        margin-top: 1rem;
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        cursor: pointer;
-    }
-</style>

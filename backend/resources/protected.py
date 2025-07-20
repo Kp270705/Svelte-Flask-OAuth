@@ -7,8 +7,7 @@ from flask_jwt_extended import (
 )
 from initResources.jwt import jwt
 
-protected_bp = Blueprint('protected', __name__, url_prefix='/user')
-
+resources_bp = Blueprint('resources', __name__, url_prefix='/resources')
 
 
 # ✅ Error handler registration
@@ -35,7 +34,7 @@ def register_jwt_error_handlers():
         }), 401
 
 
-protected_bp.route('/protected', methods=['GET'])
+resources_bp.route('/protected', methods=['GET'])
 @jwt_required()
 def protectedRoute(self):
     current_user_id = get_jwt_identity()
