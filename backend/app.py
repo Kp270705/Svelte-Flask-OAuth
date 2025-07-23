@@ -5,7 +5,7 @@ from datetime import timedelta
 from initResources.db import db
 from models.models import User
 from initResources.jwt import jwt
-from resources.protected import resources_bp, register_jwt_error_handlers
+from resources.routes import resources_bp, register_jwt_error_handlers
 from authentication import auth_bp
 from scripting.genString import generate_random_string
 
@@ -16,9 +16,15 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = generate_random_string(32)
     app.config['JWT_SECRET_KEY'] = generate_random_string(32)
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=45)
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=45)
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-    CORS(app, supports_credentials=True)
+
+    CORS(app,
+     supports_credentials=True,
+     origins=["http://localhost:5173"],
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "OPTIONS"])
+    
 
     # initialize db :
     db.init_app(app)

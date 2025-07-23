@@ -76,7 +76,6 @@ def callback():
     })
 
     userinfo = userinfo_response.json()
-    session['user'] = userinfo
 
     # here I get user info
     sub_id = userinfo['sub']
@@ -87,18 +86,32 @@ def callback():
     email = userinfo['email']
     email_verified = userinfo['email_verified']
 
+    # storing data in session:
+    session['sub_id'] = sub_id  # Store sub_id in session
+    session['name'] = name  # Store name in session
+    session['email'] = email  # Store email in session
+    session["family_name"] = family_name  # Store family name in session
+    session["given_name"] = given_name  # Store given name in session
+    session["picture_path"] = picture_path  # Store picture path in session
+    session["email_verified"] = email_verified  # Store email verified status in session
+
     if not name or not sub_id:
         return {'message': "Username or password missing"}, 400
-        
-    if User.query.filter_by(username=name).first():
-        return {'message':"User already exists"}, 400
     
-    new_user = User(sub_id, name, given_name, family_name, picture_path, email, email_verified)
-    db.session.add(new_user)
-    db.session.commit()
+    existing_user = User.query.filter_by(sub_id=sub_id).first()
+    if not existing_user:
+        # ✅ Only create if not exists
+        new_user = User(sub_id, name, given_name, family_name, picture_path, email, email_verified)
+        db.session.add(new_user)
+        db.session.commit()
+        user_id = new_user.sub_id
+        
+    else:
+        print("\n✅ Existing user found, skipping creation.")
+        user_id = existing_user.sub_id
 
     # creating access token for the user
-    jwt_access_token = create_access_token(identity=str(new_user.sub_id))
+    jwt_access_token = create_access_token(identity=str(user_id))
     print(f"\tJWT access token created: {jwt_access_token}")
 
     # Store JWT in cookie
@@ -111,6 +124,7 @@ def callback():
 @auth_bp.route("/token")
 def send_token_to_frontend():
     token = request.cookies.get("jwt_token")
+    print(f"\n\n\tJWT token in token-route is: {token}")
     if not token:
         return jsonify({"msg": "No token"}), 401
     return jsonify(access_token=token)
@@ -121,4 +135,10 @@ def send_token_to_frontend():
 def profile():
     if "user" not in session:
         return jsonify({"error": "Unauthorized"}), 401
-    return jsonify(session["user"])
+    return jsonify(
+        {
+            "name": session["name"],
+            "email": session.get("email", "No email found in session"),
+            "family_name": session.get("family_name", "No family name found in session"),
+        }
+    )

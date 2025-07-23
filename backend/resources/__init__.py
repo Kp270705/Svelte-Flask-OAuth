@@ -1,1 +1,2 @@
-from .protected import resources_bp
+from .routes import resources_bp
+

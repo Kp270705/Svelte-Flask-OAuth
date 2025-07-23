@@ -84,32 +84,37 @@
 
   async function getSensitiveInfo(){
     try{
-      const res = await fetch('http://localhost:5000/login', {
-      method: 'POST',
+      const res = await fetch('http://localhost:5000/auth/profile', {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       },
     });
     const data = await res.json();
-    secretInfo = data.sensitive_info
-    console.log(`user secret info: ${data.sensitive_info}`)
+    secretInfo = data.sub_id
+    console.log(`user secret info: ${data.sub_id}`)
     }catch(err){
       message = '❌ Failed to fetch sensitive info.';
     }
     return secretInfo
   }
 
+
   /**
    * Call protected API using the JWT
    */
   async function fetchProtected() {
+    console.log(`In fetch protected\nand token: ${token}`)
     try {
-      const res = await fetch('http://localhost:5000/secure', {
+      const res = await fetch('http://localhost:5000/resources/protected', {
+        method: "GET",
+        credentials: "include",
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      let userSecretInfo = getSensitiveInfo()
-      message = `${data.message}, user password:${userSecretInfo}`;
+      console.log(`Message: ${data.message}`);
+      let userSecretInfo = await getSensitiveInfo()
+      message = `${data.message} ✅ User Secret Info: ${userSecretInfo}`;
     } catch (err) {
       message = '❌ Failed to fetch protected data.';
     }

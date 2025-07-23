@@ -27,6 +27,6 @@ export async function readTokenFromCookie() {
     if (res.ok) {
         const data = await res.json();
         // localStorage.setItem("access_token", data.access_token);
-        return data.access_token;
+        return data.jwt_token;
     }
 }

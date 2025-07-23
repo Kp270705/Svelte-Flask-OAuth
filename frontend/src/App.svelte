@@ -19,7 +19,7 @@
     async function readToken(){
         token = await readTokenFromCookie();
         if (token) {
-            console.log(`Token read: ${token}`);
+            // console.log(`Token read: ${token}`);
         } else {
             console.log('No token found');
         }
@@ -32,6 +32,7 @@
     {#if user}
         <h1>Welcome {user.name}!</h1>
         <p>Email: {user.email}</p>
+        <p>Family Name: {user.family_name}</p>
         <button onclick={handleLogout}>Logout</button>
         <button onclick={readToken}>Read Token</button>
         {#if token}
