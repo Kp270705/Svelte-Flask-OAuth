@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 from scripting.getPass import password1,password2
 from models.models import User
 from initResources.db import db
+from scripting.initialiseValues import jwt_time_period as jwt_period
 
 
 # Blueprint for authentication routes
@@ -44,7 +45,7 @@ def login():
         "response_type": "code",
         "prompt": "consent",
     })
-    print(f"r\n\n\trequest uri is: {request_uri}")
+    # print(f"r\n\n\trequest uri is: {request_uri}")
     return redirect(request_uri)
 
 
@@ -68,7 +69,7 @@ def callback():
     token_response = requests.post(token_endpoint, data=token_data)
     token_json = token_response.json()
     access_token = token_json["access_token"]
-    print(f"\tGoogle access token: {access_token}")
+    # print(f"\tGoogle access token: {access_token}")
 
     userinfo_endpoint = google_cfg["userinfo_endpoint"]
     userinfo_response = requests.get(userinfo_endpoint, headers={
@@ -87,6 +88,7 @@ def callback():
     email_verified = userinfo['email_verified']
 
     # storing data in session:
+    session['user'] = userinfo
     session['sub_id'] = sub_id  # Store sub_id in session
     session['name'] = name  # Store name in session
     session['email'] = email  # Store email in session
@@ -123,22 +125,36 @@ def callback():
 # used to send the JWT token to the frontend
 @auth_bp.route("/token")
 def send_token_to_frontend():
-    token = request.cookies.get("jwt_token")
-    print(f"\n\n\tJWT token in token-route is: {token}")
-    if not token:
+    jwt_token = request.cookies.get("jwt_token")
+    if not jwt_token:
         return jsonify({"msg": "No token"}), 401
-    return jsonify(access_token=token)
+    return jsonify({"jwt_token": jwt_token})
 
 
 # use to fetch profile information
 @auth_bp.route("/profile")
 def profile():
-    if "user" not in session:
+    print(f"\n\n\tIn Profile route\n Name in session : {session.get('name', 'No name in session')}")
+    if "name" not in session:
         return jsonify({"error": "Unauthorized"}), 401
+
+    jwt_time_period = jwt_period  # Get the JWT time period from the imported variable
+    parts = jwt_time_period.split()  # ['1', 'days']
+
+    if parts[0] == "1":
+        parts[1] = parts[1][:-1]  # Remove 's' from 'days'
+
+    # If you want to reconstruct the string:
+    jwt_time_period = " ".join(parts)
+
+
     return jsonify(
         {
-            "name": session["name"],
+            "name": session.get("name", "No name found in session"),
             "email": session.get("email", "No email found in session"),
             "family_name": session.get("family_name", "No family name found in session"),
+            "sub_id": session.get("sub_id", "No sub_id found in session"),
+            "jwt_time_period": jwt_time_period,
         }
     )
+

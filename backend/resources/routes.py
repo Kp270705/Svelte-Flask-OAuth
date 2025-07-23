@@ -34,24 +34,15 @@ def register_jwt_error_handlers():
         }), 401
 
 
-# @resources_bp.route('/protected', methods=['GET', "OPTIONS"])
-# @jwt_required(optional=True)
-# def protectedRoute():
-#     current_user_id = get_jwt_identity()
-#     print(f"\nId get...")
-#     return{"message": f"You accessed protected resource", "user_id": f"User-id: {current_user_id}"}, 200
-
-
-@resources_bp.route('/protected', methods=['GET', "OPTIONS"])
-@jwt_required(optional=True)
+@resources_bp.route('/protected')
+@jwt_required()
 def protectedRoute():
-    if request.method == "OPTIONS":
-        return '', 204  # Preflight handled
-
     current_user_id = get_jwt_identity()
+    print(f"\nUser ID: {current_user_id}")
     return {
-        "message": "You accessed protected resource",
-        "user_id": f"User-id: {current_user_id}"
+        "message": "✅ You accessed protected resource",
+        "secret_id": f"{current_user_id}"
+
     }, 200
 
 

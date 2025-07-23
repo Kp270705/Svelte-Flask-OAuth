@@ -8,7 +8,7 @@
 
     async function init() {
         user = await getProfile();
-        if (user) console.log(`User is: ${user.name}`);
+        // token = await readTokenFromCookie();
     }
 
     async function handleLogout() {
@@ -34,11 +34,11 @@
         <p>Email: {user.email}</p>
         <p>Family Name: {user.family_name}</p>
         <button onclick={handleLogout}>Logout</button>
-        <button onclick={readToken}>Read Token</button>
+        <button onclick={readToken}>Load Token</button>
         {#if token}
             <PersonalResource {token} />
         {:else}
-            <p>No token available. Please log in.</p>
+            <p>Token is available for next {user.jwt_time_period}. Quickly load the token for <strong>protected resource access</strong>.</p>
         {/if}
     {:else}
         <button onclick={login}>Login with Google</button>

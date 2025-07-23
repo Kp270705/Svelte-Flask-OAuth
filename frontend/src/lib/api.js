@@ -21,12 +21,14 @@ export async function logout() {
 
 
 export async function readTokenFromCookie() {
+    console.log("Reading token from cookie");
     const res = await fetch("http://localhost:5000/auth/token", {
         credentials: "include"
     });
     if (res.ok) {
         const data = await res.json();
-        // localStorage.setItem("access_token", data.access_token);
         return data.jwt_token;
     }
 }
+
+
