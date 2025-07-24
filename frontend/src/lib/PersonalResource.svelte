@@ -4,6 +4,7 @@
 
   // Reactive state variables
   let message = $state('');
+  let message2 = $state('');
   let timeLeft = $state('');
   let isExpired = $state(false);
   let createdAt = $state('');

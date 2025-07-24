@@ -138,15 +138,11 @@ def profile():
     if "name" not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
-    jwt_time_period = jwt_period  # Get the JWT time period from the imported variable
-    parts = jwt_time_period.split()  # ['1', 'days']
-
+    jwt_time_period = jwt_period 
+    parts = jwt_time_period.split()  
     if parts[0] == "1":
-        parts[1] = parts[1][:-1]  # Remove 's' from 'days'
-
-    # If you want to reconstruct the string:
+        parts[1] = parts[1][:-1]
     jwt_time_period = " ".join(parts)
-
 
     return jsonify(
         {

@@ -45,5 +45,4 @@ def protectedRoute():
 
     }, 200
 
-
 print("✅ Resources.protected loaded")
